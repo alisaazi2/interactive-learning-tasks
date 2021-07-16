@@ -1,13 +1,11 @@
+data "aws_region" "current" {}
 
-
-output "SomeOutput" {
-  value = <<EOF
-
-        region         us-east-2
-        key name        ${aws_key_pair.ilearning-wordpress.key_name}
-        key_id         ${aws_key_pair.ilearning-wordpress.key_pair_id}
-       
-
-
-    EOF
+output "region" {
+  value = data.aws_region.current.name
+}
+output "key_name" {
+  value = aws_key_pair.ilearning-wordpress.key_name
+}
+output "key_id" {
+  value = aws_key_pair.ilearning-wordpress.key_pair_id
 }
