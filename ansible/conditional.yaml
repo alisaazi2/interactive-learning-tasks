@@ -1,0 +1,56 @@
+--- 
+- name: Conditional Playbook
+  hosts: all
+  become: true
+  become_method: sudo
+  tasks: 
+  
+  - name: cache
+    when: 
+    - ansible_facts['distribution'] == "Ubuntu"  
+    apt:
+      update_cache: yes
+
+  - name: Download mariadb on Ubuntu
+    when: 
+    - ansible_facts['distribution'] == "Ubuntu"
+    ansible.builtin.package:
+      name: mariadb-server
+      state: present
+    notify: Restart mariadb Ubuntu
+  
+  - name: Add users to Amazon
+    when: 
+    - ansible_facts['distribution'] == "Amazon" 
+    ansible.builtin.user:
+      name: "{{ item }}"
+      generate_ssh_key: yes
+    with_items:
+    - Bob
+    - ben
+    - lisa
+    - katty
+  
+  - name: Download csv file
+    when: 
+    - ansible_facts['distribution'] == "Amazon" 
+    ignore_errors: true
+    ansible.builtin.get_url:
+      url: https://people.sc.fsu.edu/~jburkardt/data/csv/addresses.csv
+      dest: "{{ item.dest }}"
+    with_items:
+      - { dest: /home/Bob/ }
+      - { dest: /home/ben/ }
+      - { dest: /home/lisa/ }
+      - { dest: /home/katty/ }
+  handlers:
+  - name: Restart mariadb Ubuntu
+    when: 
+    - ansible_facts['distribution'] == "Ubuntu"
+    systemd:
+      name: mariadb-server
+      state: restarted 
+
+
+  
+  
