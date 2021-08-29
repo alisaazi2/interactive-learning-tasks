@@ -1,0 +1,6 @@
+- name: execute role
+  hosts: all
+  become: yes
+  become_method: sudo 
+  roles:
+    - wordpress

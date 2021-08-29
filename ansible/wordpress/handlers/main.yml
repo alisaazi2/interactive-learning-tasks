@@ -1,0 +1,22 @@
+---
+- name: Start webserver
+  when: 
+  - ansible_facts['distribution'] == "Amazon"
+  systemd: 
+    name: "{{ item }}" 
+    state: restarted
+    enabled: true
+  with_items:
+  - httpd
+  
+  
+- name: Start webserver Ubuntu
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"
+  systemd: 
+    name: "{{ item }}" 
+    state: restarted
+    enabled: true
+  with_items:
+  - apache2
+  
