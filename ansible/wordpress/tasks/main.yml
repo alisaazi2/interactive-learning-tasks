@@ -54,6 +54,7 @@
       - apache2
       - telnet
     state: present
+  notify: Start webserver Ubuntu
   
 - name: Enable ufw to allow Apache
   ufw:
@@ -77,7 +78,7 @@
   - php-json
   - php-zip
   - php-mbstring
-  notify: Start webserver Ubuntu
+  
 
 - name: Replace dir.conf file
   copy:
