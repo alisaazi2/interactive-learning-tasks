@@ -1,7 +1,9 @@
 ---
-- name: Install prerequisites Amazon
+  
+- name: Install prerequisites 
   when: 
   - ansible_facts['distribution'] == "Amazon"
+  - ansible_facts['distribution_version'] == "2"
   package:
     name: "{{ item }}"
     state: present
@@ -12,27 +14,31 @@
   - telnet
   notify: Start webserver
 
+
 - name: Get wordpress 
   when: 
   - ansible_facts['distribution'] == "Amazon"
+  - ansible_facts['distribution_version'] == "2"
   get_url:
     url: https://wordpress.org/wordpress-{{ wordpress_version }}.tar.gz
-    dest: /tmp/wordpress-{{ wordpress_version }}.tar.gz 
+    dest: /tmp/wordpress-{{ wordpress_version }}.tar.gz
     mode: '0440'
 
 
 - name: Unzip Wordpress
   when: 
   - ansible_facts['distribution'] == "Amazon"
+  - ansible_facts['distribution_version'] == "2"
   unarchive:
     src: /tmp/wordpress-{{ wordpress_version }}.tar.gz
     dest: /var/www/html/
     remote_src: true
-  
+
 
 - name: Move wordpress
   when: 
   - ansible_facts['distribution'] == "Amazon"
+  - ansible_facts['distribution_version'] == "2"
   shell: "cp -r  /var/www/html/wordpress/*   /var/www/html || exit 0"
   ignore_errors: true
 - name: cache
@@ -40,6 +46,21 @@
   - ansible_facts['distribution'] == "Ubuntu"  
   apt:
     update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install apache2 
+  package: 
+    name:
+      - apache2
+      - telnet
+    state: present
+  
+- name: Enable ufw to allow Apache
+  ufw:
+    rule: allow
+    name: Apache Full
+    
+
 
 - name: Install prerequisites Ubuntu
   when: 
@@ -48,100 +69,43 @@
     name: "{{ item }}"
     state: present
   with_items:
-  - apache2
   - php
-  - php-mcrypt
+  - libapache2-mod-php
   - php-mysql
-  - php-common
-  - php-mysql
-  - php-tidy
-  - php-xml
-  - php-xmlrpc
-  - php-mbstring
-  - php-memcached
   - php-curl
+  - php-gd 
+  - php-json
   - php-zip
-
+  - php-mbstring
   notify: Start webserver Ubuntu
 
-- name: Install MySQL Python
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  apt:
-    name: python-mysqldb
-    state: present
+- name: Replace dir.conf file
+  copy:
+    src: ./test-file
+    dest: /etc/apache2/mods-enabled/dir.conf
  
-- name: install MySQL Server
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  apt:
-    name: mysql-server
-    state: present
- 
-- name: install MySQL Client
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  apt:
-    name: mysql-client
-    state: present
- 
-- name: install MySQL Common
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  apt:
-    name: mysql-common
-    state: present
- 
-- name: ensure MySQL always starts
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  service:
-    name: mysql
-    state: started
-    enabled: yes
-- name: Concantenate the install and directory into a single variable
-  set_fact:
-    path: /var/www/public_html
- 
-- name: Ensure that installation directory exists
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  file: path={{path}} state=directory
-  
-- name: Download Latest Version to /tmp
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  get_url: url=https://wordpress.org/latest.tar.gz force=no dest=/tmp/wordpress.tar.gz
-  
- 
-- name: Extract archive
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  unarchive: src=/tmp/wordpress.tar.gz dest=/tmp copy=no
-  
- 
- 
-- name: Move extracted directory to {{path}}
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  shell: cp -r -n /tmp/wordpress/* /var/www/public_html
-  
- 
- 
-- name: Remove wordpress.tar.gz
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  file: path=/tmp/wordpress.tar.gz state=absent
-  
- 
-- name: Fetch random salts for WordPress config
-  when: 
-  - ansible_facts['distribution'] == "Ubuntu"
-  local_action: command curl https://api.wordpress.org/secret-key/1.1/salt/
-  register: "wp_salt"
-  become: no
-  become_method: sudo
- 
+- name: Download Wordpress file
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /tmp
+
+- name: Unzip wordpress file
+  unarchive:
+    src: /tmp/wordpress-5.8.tar.gz
+    dest: /var/www/html
+    remote_src: true   
+
+- name: Move wordpress file
+  shell: "mv -f /var/www/html/wordpress/*   /var/www/html || exit 0"
+  ignore_errors: true    
+
+- name: Fix html file ownership
+  file:
+    path: /var/www/html
+    owner: www-data
+    group: www-data
+    state: directory
+    recurse: yes
  
 
 - name: Ensure group "somegroup" exists
@@ -167,6 +131,8 @@
   - ansible_facts['distribution'] == "Ubuntu"
   ansible.builtin.user:
     name: "{{ item }}"
+    groups: devops
+    generate_ssh_key: yes
   with_items:
   - "{{ users }}"
 
