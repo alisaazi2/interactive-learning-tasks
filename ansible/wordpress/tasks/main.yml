@@ -3,7 +3,6 @@
 - name: Install prerequisites 
   when: 
   - ansible_facts['distribution'] == "Amazon"
-  - ansible_facts['distribution_version'] == "2"
   package:
     name: "{{ item }}"
     state: present
@@ -18,7 +17,6 @@
 - name: Get wordpress 
   when: 
   - ansible_facts['distribution'] == "Amazon"
-  - ansible_facts['distribution_version'] == "2"
   get_url:
     url: https://wordpress.org/wordpress-{{ wordpress_version }}.tar.gz
     dest: /tmp/wordpress-{{ wordpress_version }}.tar.gz
@@ -28,7 +26,6 @@
 - name: Unzip Wordpress
   when: 
   - ansible_facts['distribution'] == "Amazon"
-  - ansible_facts['distribution_version'] == "2"
   unarchive:
     src: /tmp/wordpress-{{ wordpress_version }}.tar.gz
     dest: /var/www/html/
@@ -41,6 +38,7 @@
   - ansible_facts['distribution_version'] == "2"
   shell: "cp -r  /var/www/html/wordpress/*   /var/www/html || exit 0"
   ignore_errors: true
+
 - name: cache
   when: 
   - ansible_facts['distribution'] == "Ubuntu"  
@@ -49,6 +47,8 @@
     cache_valid_time: 3600
 
 - name: Install apache2 
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"  
   package: 
     name:
       - apache2
@@ -57,6 +57,8 @@
   notify: Start webserver Ubuntu
   
 - name: Enable ufw to allow Apache
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"  
   ufw:
     rule: allow
     name: Apache Full
@@ -81,26 +83,36 @@
   
 
 - name: Replace dir.conf file
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"  
   copy:
     src: ./test-file
     dest: /etc/apache2/mods-enabled/dir.conf
  
 - name: Download Wordpress file
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"  
   get_url:
     url: https://wordpress.org/latest.tar.gz
     dest: /tmp
 
 - name: Unzip wordpress file
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"  
   unarchive:
     src: /tmp/wordpress-5.8.tar.gz
     dest: /var/www/html
     remote_src: true   
 
 - name: Move wordpress file
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"  
   shell: "mv -f /var/www/html/wordpress/*   /var/www/html || exit 0"
   ignore_errors: true    
 
 - name: Fix html file ownership
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"  
   file:
     path: /var/www/html
     owner: www-data
