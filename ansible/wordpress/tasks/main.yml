@@ -54,6 +54,11 @@
       - apache2
       - telnet
     state: present
+
+- name: enabled mod_rewrite
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu" 
+  apache2_module: name=rewrite state=present
   notify: Start webserver Ubuntu
   
 - name: Enable ufw to allow Apache
@@ -79,12 +84,18 @@
   - php-gd 
   - php-json
   - php-zip
-  - php-mbstring
+  - php-mbstring  
+  - mysql-server
+  - mysql-client
+  - python-mysqldb  
+  
+- name: Start the mysql database
+  when: 
+  - ansible_facts['distribution'] == "Ubuntu"
+  service:
+    name: mysql
+    state: started
 
-- name: Replace dir.conf file
-  copy:
-    src: ./test-file
-    dest: /etc/apache2/mods-enabled/dir.conf  
 - name: Download Wordpress file
   when: 
   - ansible_facts['distribution'] == "Ubuntu"  
@@ -103,7 +114,9 @@
 - name: Move wordpress file
   when: 
   - ansible_facts['distribution'] == "Ubuntu"  
-  shell: "mv -f /var/www/html/wordpress/*   /var/www/html || exit 0"
+  shell: |
+    rm  /var/www/html/index.html
+    mv -f /var/www/html/wordpress/*   /var/www/html || exit 0
   ignore_errors: true    
 
 - name: Fix html file ownership
