@@ -46,16 +46,16 @@ node("worker1"){
         }
     }
         AMI = "$result"
-        withEnv(['AMI ="$AMI']) {
-            stage("Create Instance"){
-            build job: 'terraform-ec2', parameters: [
-            string(name: 'environment', value: "$params.environment"),
-            string(name: 'AMI_ID', value: "$AMI"),
-            booleanParam(name: 'command', value: true)
-            ]
+        
+        stage("Create Instance"){
+        build job: 'terraform-ec2', parameters: [
+        string(name: 'environment', value: "$params.environment"),
+        string(name: 'AMI_ID', value: "$AMI"),
+        booleanParam(name: 'command', value: true)
+         ]
     
-       }
+      }
    
-        }
+        
    
 }
